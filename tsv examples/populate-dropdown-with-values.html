@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Searchbox + Dropdown menu + CARTO.js</title>
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8"/>
+    <link rel="shortcut icon" href="https://cartodb.com/assets/favicon.ico" />
+
+    <link rel="stylesheet" href="https://cartodb-libs.global.ssl.fastly.net/cartodb.js/v3/3.15/themes/css/cartodb.css" />
+    <script src="https://cartodb-libs.global.ssl.fastly.net/cartodb.js/v3/3.15/cartodb.js"></script>
+
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.3/css/select2.min.css" rel="stylesheet" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.3/js/select2.min.js"></script>
+
+    <style>
+        html, body, #map {
+            height: 100%;
+            padding: 0;
+            margin: 0;
+        }
+        #wraper-city-selector {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+        }
+        .js-city-selector {
+            width: 175px;
+        }
+
+    </style>
+
+</head>
+<body>
+
+<!-- map div -->
+<div id="map"></div>
+
+<!-- selector div -->
+<div id="wraper-city-selector">
+    <select class="js-city-selector">
+        <option value="#" selected disabled>Select a metric</option>
+    </select>
+</div>
+
+<!--&lt;!&ndash; legend div &ndash;&gt;-->
+<!--<div class='cartodb-legend category'>-->
+    <!--<div class="legend-title" style="color:#284a59">Cities</div>-->
+    <!--<ul>-->
+        <!--<li><div class="bullet" style="background-color:#5F4690"></div>Populated Place</li>-->
+        <!--<li><div class="bullet" style="background-color:#1D6996"></div>Admin. 1 Capital</li>-->
+        <!--<li><div class="bullet" style="background-color:#38A6A5"></div>Admin. 0 Capital</li>-->
+        <!--<li><div class="bullet" style="background-color:#0F8554"></div>Admin. 1 region Capital</li>-->
+        <!--<li><div class="bullet" style="background-color:#73AF48"></div>Scientific Station</li>-->
+        <!--<li><div class="bullet" style="background-color:#EDAD08"></div>Admin. O region Capital </li>-->
+        <!--<li><div class="bullet" style="background-color:#E17C05"></div>Admin. 0 Capital Alt.</li>-->
+        <!--<li><div class="bullet" style="background-color:#CC503E"></div>Historic Place</li>-->
+        <!--<li><div class="bullet" style="background-color:#94346E"></div>Meteorological Station</li>-->
+    <!--</ul>-->
+<!--</div>-->
+
+<script type="text/cartocss" id="style">
+      #layer {
+            polygon-fill: ramp([households],
+            (#eff3ff, #bdd7e7, #6baed6, #3182bd, #08519c), quantiles);
+        }
+        #layer::outline {
+            line-width: 1;
+            line-color: #FFFFFF;
+            line-opacity: 0.5;
+        }
+    </script>
+
+<script type="text/sql" id="query">
+      SELECT * FROM carto_data_test_2 WHERE category ilike '%age%'
+    </script>
+
+<script>
+    function main() {
+
+        // get selector
+        var selector = $(".js-city-selector");
+
+        // get styles & query
+        style = $("#style").text(),
+            query = $("#query").text(),
+
+        // create leaflet map
+         map = L.map('map', {
+            zoomControl: false,
+            center: [34, -84.3],
+            zoom: 9
+        })
+
+        // add a base layer
+        L.tileLayer('http://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}.png', {
+        }).addTo(map);
+
+        // add cartodb layer with one sublayer
+        cartodb.createLayer(map, {
+            user_name: 'bestigegroup-admin',
+            type: 'cartodb',
+            sublayers: [{
+                sql: "select * from carto_data_test_2 where category ilike '%age%'",
+                cartocss: $('#cartocss').html(),
+            }]
+        })
+            .addTo(map)
+            .done(function(layer){
+
+                // declare sublayer variable
+                var cityLayer = layer.getSubLayer(0);
+
+                // populate selector with city names from sublayer data
+                var sql = new cartodb.SQL({ user: 'bestigegroup-admin' });
+                sql.execute(query)
+                    .done(function(data) {
+                        for (var i = 0; i < data.total_rows; i++) {
+
+                            var name = data.rows[i].subcategory;
+
+                            selector.append(`<option value="${name}">${name}</option>`);
+                        }
+                    });
+
+                selector.select2();
+
+                // filter cities when selecting an option from selector
+                selector.change(function(){
+
+                    var input = $( ".js-city-selector option:selected" ).val();
+
+                    console.log("You have selected " + input + ".");
+
+                    cityLayer.setSQL(query + " AND  ilike subcategory '%" + input + "%'");
+
+                });
+            });
+    }
+    window.onload = main;
+</script>
+
+</body>
+</html>

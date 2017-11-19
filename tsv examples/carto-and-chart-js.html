@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Land Composition (GA)</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.0/Chart.min.js"></script>
+    <meta name = "viewport" content = "initial-scale = 1, user-scalable = no">
+    <script src="http://libs.cartocdn.com/cartodb.js/v3/3.15/cartodb.js"></script>
+    <style>
+        canvas {
+            height: 500px;
+            margin: 5px;
+            width: 920px;
+        }
+    </style>
+</head>
+<body>
+<canvas id="canvas"></canvas>
+<script>
+    var sql = cartodb.SQL({ user: 'bestigegroup-admin' });
+    sql.execute("SELECT subcategory_bin, SUM(households) as households FROM carto_data_test_2 WHERE category ilike '%age%' GROUP BY 1")
+            .done(function(data) {
+            console.log(data);
+            var total = [];
+            var labels  = [];
+            for (i in data.rows) {
+                total.push(data.rows[i].households);
+                labels.push(data.rows[i].subcategory_bin);
+            }
+            console.log(data);
+            var lineChartData = {
+                labels : labels,
+                datasets : [
+                    {
+                        barDatasetSpacing : 0,
+                        barValueSpacing : 0,
+                        fillColor : "#229A00",
+                        strokeColor : "#005824",
+                        pointColor : "#CCECE6",
+                        pointStrokeColor : "#fff",
+                        data : total
+                    }
+                ]
+            }
+            let context = document.getElementById("canvas").getContext("2d");
+            var myBarChart = new Chart(context, {
+                type: 'bar',
+                data: lineChartData
+            });
+        });
+</script>
+</body>
+</html>

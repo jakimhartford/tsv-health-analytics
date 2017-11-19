@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Map with Dropdown and Bar Chart</title>
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8"/>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.0/Chart.min.js"></script>
+    <!-- include cartodb.js library -->
+    <script src="http://libs.cartocdn.com/cartodb.js/v3/3.15/cartodb.js"></script>
+    <script
+            src="https://code.jquery.com/jquery-3.2.1.js"
+            integrity="sha256-DZAnKJ/6XZ9si04Hgrsxu/8s717jcIzLy3oi35EouyE="
+            crossorigin="anonymous">
+    </script>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/css/bootstrap.min.css"
+          integrity="sha384-PsH8R72JQ3SOdhVi3uxftmaW6Vc51MKb0q5P2rRUpPvrszuE4W1povHYgTpBfshb"
+          crossorigin="anonymous">
+    <link rel="stylesheet" href="http://libs.cartocdn.com/cartodb.js/v3/3.15/themes/css/cartodb.css" />
+    <style>
+        html, body, #map {
+            height: 75%;
+            width: 75%;
+            padding: 0;
+            margin: 0;
+        }
+        #selector_menu{
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            z-index: 9000;
+        }
+        canvas {
+            height: 100px;
+            margin: 5px;
+            width: 200px;
+        }
+    </style>
+    <style type="text/cartocss" id="ageStyle">
+        #layer { polygon-fill: ramp([households], (#eff3ff, #bdd7e7, #6baed6, #3182bd, #08519c), quantiles);  }
+        #layer::outline {
+            line-width: 1;
+            line-color: #FFFFFF;
+            line-opacity: 0.5;
+        }
+    </style>
+</head>
+<body>
+<!--Dropdown-->
+<div id='selector_menu'>
+    <select id='selector'>
+        <option value='age'>Age</option>
+        <option value='race'>Race</option>
+    </select>
+</div>
+<div class="container" id="map"></div>
+<div class="container">
+    <canvas id="canvas"></canvas>
+</div>
+<script>
+    var sql = cartodb.SQL({ user: 'bestigegroup-admin' });
+    sql.execute("SELECT subcategory_bin, SUM(households) as households FROM carto_data_test_2 WHERE category ilike '%age%' GROUP BY 1")
+        .done(function(data) {
+            console.log(data);
+            var total = [];
+            var labels  = [];
+            for (i in data.rows) {
+                total.push(data.rows[i].households);
+                labels.push(data.rows[i].subcategory_bin);
+            }
+            console.log(data);
+            var lineChartData = {
+                labels : labels,
+                datasets : [
+                    {
+                        barDatasetSpacing : 0,
+                        barValueSpacing : 0,
+                        fillColor : "#229A00",
+                        strokeColor : "#005824",
+                        pointColor : "#CCECE6",
+                        pointStrokeColor : "#fff",
+                        data : total
+                    }
+                ]
+            }
+            let context = document.getElementById("canvas").getContext("2d");
+            var myBarChart = new Chart(context, {
+                type: 'bar',
+                data: lineChartData
+            });
+        });
+</script>
+<script>
+
+    function main() {
+
+        // create leaflet map
+        var map = L.map('map', {
+            zoomControl: false,
+            center: [34, -84.3],
+            zoom: 9
+        })
+
+        // add a base layer
+        L.tileLayer('http://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}.png', {
+        }).addTo(map);
+
+        // add cartodb layer with one sublayer
+        cartodb.createLayer(map, {
+            user_name: 'bestigegroup-admin',
+            type: 'cartodb',
+            sublayers: [{
+                sql: "select * from carto_data_test_2 WHERE category ilike '%age'",
+                cartocss: $('#ageStyle').html(),
+            }]
+        })
+            .addTo(map)
+            .on('done', function(layer){
+                sublayer = layer.getSubLayer(0);
+
+                var LayerActions = {
+                    age: function(){
+                        sublayer.setSQL("SELECT * FROM carto_data_test_2 WHERE category ilike '%age'");
+                        sublayer.setCartoCSS("#layer { polygon-fill: ramp([households], (#eff3ff, #bdd7e7, #6baed6, #3182bd, #08519c), quantiles);  }  #layer::outline {  line-width: 1;  line-color: #FFFFFF;  line-opacity: 0.5;  }"
+
+                        );
+                    },
+                    race: function(){
+                        sublayer.setSQL("SELECT * FROM carto_data_test_2 WHERE category ilike '%race'");
+                        sublayer.setCartoCSS("#layer {polygon-fill: ramp([households], (#f3e0f7, #dbbaed, #b998dd, #9178c4, #63589f), quantiles);}#layer::outline {line-width: 1;line-color: #FFFFFF;line-opacity: 0.5;}"
+                        );
+                        return true;
+                    }
+                }
+
+                $('#selector').change(function() {
+                    LayerActions[$(this).val()]();
+                });
+
+            });
+    }
+
+    // you could use $(window).load(main);
+    window.onload = main;
+
+</script>
+<script>
+    var sql = cartodb.SQL({ user: 'bestigegroup-admin' });
+    sql.execute("SELECT subcategory_bin, SUM(households) as households FROM carto_data_test_2 WHERE category ilike '%" + selector.value + "%' GROUP BY 1")
+        .done(function(data) {
+            console.log(data);
+            var total = [];
+            var labels  = [];
+            for (i in data.rows) {
+                total.push(data.rows[i].households);
+                labels.push(data.rows[i].subcategory_bin);
+            }
+            console.log(data);
+            var lineChartData = {
+                labels : labels,
+                datasets : [
+                    {
+                        barDatasetSpacing : 0,
+                        barValueSpacing : 0,
+                        fillColor : "#229A00",
+                        strokeColor : "#005824",
+                        pointColor : "#CCECE6",
+                        pointStrokeColor : "#fff",
+                        data : total
+                    }
+                ]
+            }
+            let context = document.getElementById("canvas").getContext("2d");
+            var myBarChart = new Chart(context, {
+                type: 'bar',
+                data: lineChartData
+            });
+        });
+</script>
+
+</body>
+</html>

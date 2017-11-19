@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        html, body, #map {
+            height: 100%;
+            padding: 0;
+            margin: 0;
+        }
+        #layer_selector {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            padding: 0;
+        }
+
+    </style>
+
+    <link rel="stylesheet" href="http://libs.cartocdn.com/cartodb.js/v2/themes/css/cartodb.css" />
+    <link rel="stylesheet" href="http://geosprocket.com/assets/bootstrap/css/bootstrap.css" />
+    <!--[if lte IE 8]>
+    <link rel="stylesheet" href="http://libs.cartocdn.com/cartodb.js/v2/themes/css/cartodb.ie.css" />
+    <![endif]-->
+
+</head>
+
+<body>
+<div id="map"></div>
+<div id="layer_selector" class="cartodb_infobox btn-group">
+    <a class="btn dropdown-toggle" data-toggle="dropdown" href="#">Type de Culture
+        <span class="caret"></span>
+    </a>
+    <ul class="dropdown-menu">
+        <li><a href="#" data="tout" class="selected">Tout</a></li>
+        <li><a href="#" data="ble">Ble</a></li>
+        <li><a href="#" data="fourr">Fourrage</a></li>
+        <li><a href="#" data="jache">Jacherre</a></li>
+        <li><a href="#" data="mais">Mais</a></li>
+    </ul>
+</div>
+</body>
+
+<!-- include cartodb.js library -->
+<script src="https://cartodb-libs.global.ssl.fastly.net/cartodb.js/v3/3.15/cartodb.js"></script>
+<script src="http://geosprocket.com/assets/bootstrap/js/bootstrap.min.js"></script>
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.8.3/jquery.min.js"></script>
+
+<script>
+    // create layer selector
+    function createSelector(layer) {
+        var sql = new cartodb.SQL({ user: 'bestigegroup-admin' });
+        var $options = $('#layer_selector li');
+        $options.click(function(e) {
+            // get the area of the selected layer
+            var $li = $(e.target);
+            var crop = $li.attr('data');
+            // deselect all and select the clicked one
+            $options.removeClass('selected');
+            $li.addClass('selected');
+            // create query based on data from the layer
+            var query = "select * from carto_data_test_2";
+            if(crop !== 'tout') {
+                query = "select * from carto_data_teset_2 where " + crop + " > 0 ";
+            }
+            // change the query in the layer to update the map
+            layer.setQuery(query);
+        });
+    }
+    function main() {
+        cartodb.createVis('map', 'http://dai.cartodb.com/api/v1/viz/11330/viz.json', {
+            tiles_loader: true,
+            center_lat: 34.88593094075317,
+            center_lon: -3.0322265625,
+            zoom: 8
+        })
+            .done(function(vis, layers) {
+                // layer 0 is the base layer, layer 1 is cartodb layer
+                createSelector(layers[1])
+            })
+            .error(function(err) {
+                console.log(err);
+            });
+    }
+    window.onload = main;
+</script>
+
+
+</html>

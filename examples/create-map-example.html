@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Training | createLayer | CartoDB.js</title>
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+    <link rel="shortcut icon" href="http://cartodb.com/assets/favicon.ico" />
+    <link rel="stylesheet" href="https://cartodb-libs.global.ssl.fastly.net/cartodb.js/v3/3.15/themes/css/cartodb.css" />
+    <script src="https://cartodb-libs.global.ssl.fastly.net/cartodb.js/v3/3.15/cartodb.js"></script>
+    <style>
+        html,
+        body {
+            height: 100%;
+            padding: 0;
+            margin: 0;
+            position: relative;
+        }
+
+        #map {
+            height: 100%;
+            padding: 0;
+            margin: 0;
+        }
+    </style>
+    <!-- layer SQL -->
+    <script type="text/sql" id="sql">
+    SELECT * FROM ne_10m_populated_places_simple
+  </script>
+
+    <!-- layer CartoCSS style -->
+    <style type="text/cartocss" id="cartocss">
+        #ne_10m_populated_places_simple{
+            marker-fill-opacity: 0.9;
+            marker-line-color: #FFF;
+            marker-line-width: 0;
+            marker-line-opacity: 1;
+            marker-placement: point;
+            marker-multi-policy: largest;
+            marker-type: ellipse;
+            marker-fill: #FFCC00;
+            marker-allow-overlap:true;
+            marker-clip: false;
+            marker-comp-op: multiply;
+        }
+    </style>
+</head>
+
+<body>
+<div id="map"></div>
+<script>
+    (function() {
+        'use strict';
+        $(document).ready(function() {
+            var sublayer
+            var map = L.map('map', {
+                zoomControl: true,
+                center: [40.418709, -3.703277],
+                zoom: 3
+            });
+            // add a nice baselayer from Stamen
+            // You can try with this other source
+            // http://{s}.tile.stamen.com/watercolor/{z}/{x}/{y}.jpg
+            L.tileLayer('http://{s}.tile.stamen.com/toner/{z}/{x}/{y}.png', {
+                attribution: 'Stamen and CartoDB attribution'
+            }).addTo(map);
+
+            cartodb.createLayer(map, {
+                user_name: 'cartotraining',
+                filter: "mapnik",
+                type: 'cartodb',
+                sublayers: [{
+                    sql: $('#sql').html(),
+                    cartocss: $('#cartocss').html(),
+                }]
+            }, {
+                /*options here*/
+            })
+                .addTo(map)
+                .on('done', function(layer) {
+                    console.log(layer);
+                })
+                .on('error', function(e) {
+                    console.log('error: ' + e);
+                });
+        });
+    })();
+</script>
+</body>
+
+</html>

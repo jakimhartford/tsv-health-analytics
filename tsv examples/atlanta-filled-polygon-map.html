@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Leaflet multilayer example | CartoDB.js</title>
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8"/>
+    <link rel="shortcut icon" href="http://cartodb.com/assets/favicon.ico" />
+    <style>
+        html, body, #map {
+            height: 100%;
+            padding: 0;
+            margin: 0;
+        }
+    </style>
+    <style type="text/cartocss" id="cartocss">
+        #layer {
+            polygon-fill: ramp([households],
+            (#eff3ff, #bdd7e7, #6baed6, #3182bd, #08519c), quantiles);
+        }
+        #layer::outline {
+            line-width: 1;
+            line-color: #FFFFFF;
+            line-opacity: 0.5;
+        }
+    </style>
+
+    <link rel="stylesheet" href="http://libs.cartocdn.com/cartodb.js/v3/3.15/themes/css/cartodb.css" />
+</head>
+<body>
+<div id="map"></div>
+
+
+<!-- include cartodb.js library -->
+<script src="http://libs.cartocdn.com/cartodb.js/v3/3.15/cartodb.js"></script>
+<script>
+
+    function main() {
+
+        // create leaflet map
+        var map = L.map('map', {
+            zoomControl: false,
+            center: [43, 0],
+            zoom: 3
+        })
+
+        // add a base layer
+        L.tileLayer('http://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}.png', {
+        }).addTo(map);
+
+        // add cartodb layer with one sublayer
+        cartodb.createLayer(map, {
+            user_name: 'bestigegroup-admin',
+            type: 'cartodb',
+            sublayers: [{
+                sql: 'select * from carto_data_test_2',
+                cartocss: $('#cartocss').html(),
+            }]
+        })
+            .addTo(map)
+            .done(function(layer) {
+
+            });
+
+
+    }
+
+    // you could use $(window).load(main);
+    window.onload = main;
+
+</script>
+
+</body>
+</html>

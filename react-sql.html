@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8" />
+    <title>Hello World</title>
+    <script src="https://unpkg.com/react@16/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@16/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/babel-standalone@6.15.0/babel.min.js"></script>
+    <script src="http://libs.cartocdn.com/cartodb.js/v3/3.15/cartodb.js"></script>
+</head>
+<body>
+<div id="root"></div>
+<script>
+    var sql = new cartodb.SQL({ user: 'bestigegroup-admin' });
+    sql.execute("SELECT sum(households) as households FROM carto_data_test_2 LIMIT 100")
+        .done(function(data) {
+            console.log(data.rows);
+        })
+        .error(function(errors) {
+            // errors contains a list of errors
+            console.log("errors:" + errors);
+        })
+</script>
+<script type="text/babel">
+    const element = (
+            <div>
+                <h1>Hello, world!</h1>
+                <h2>It is {households}.</h2>
+            </div>
+    );
+    ReactDOM.render(
+        element,
+        document.getElementById('root')
+    );
+    setInterval(tick, 1000);s
+</script>
+</body>
+</html>

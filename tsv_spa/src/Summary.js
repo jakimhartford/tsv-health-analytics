@@ -4,7 +4,7 @@
 import React, { Component } from "react";
 
 class Summary extends React.Component {
-    render() {
+        render() {
         return (
             <div>
                 <h2>Total Population</h2>

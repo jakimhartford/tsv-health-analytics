@@ -10,29 +10,29 @@
 </head>
 <body>
 <div id="root"></div>
-<script>
-    var sql = new cartodb.SQL({ user: 'bestigegroup-admin' });
-    sql.execute("SELECT sum(households) as households FROM carto_data_test_2 LIMIT 100")
-        .done(function(data) {
-            console.log(data.rows);
-        })
-        .error(function(errors) {
-            // errors contains a list of errors
-            console.log("errors:" + errors);
-        })
-</script>
 <script type="text/babel">
-    const element = (
-            <div>
-                <h1>Hello, world!</h1>
-                <h2>It is {households}.</h2>
-            </div>
-    );
-    ReactDOM.render(
-        element,
-        document.getElementById('root')
-    );
-    setInterval(tick, 1000);s
+    function createNode(element) {
+        return document.createElement(element);
+    }
+
+    function append(parent, el) {
+        return parent.appendChild(el);
+    }
+
+    const p = document.getElementById('households');
+    const url = 'https://.carto.com/api/v2/sql?q=SELECT sum(households) as households FROM carto_data_test_2 LIMIT 100';
+
+    fetch(url)
+        .then((resp) => resp.json())
+        .then(function(data) {
+            let households = data.results;
+            return households.map(function(households) {
+                let p = createNode('p')
+            })
+        })
+        .catch(function(error) {
+            console.log(error);
+        });
 </script>
 </body>
 </html>

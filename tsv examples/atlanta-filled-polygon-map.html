@@ -39,8 +39,8 @@
         // create leaflet map
         var map = L.map('map', {
             zoomControl: false,
-            center: [43, 0],
-            zoom: 3
+            center: [34, -84.3],
+            zoom: 10
         })
 
         // add a base layer
@@ -52,7 +52,7 @@
             user_name: 'bestigegroup-admin',
             type: 'cartodb',
             sublayers: [{
-                sql: 'select * from carto_data_test_2',
+                sql: 'select * from carto_data_test_2 where ',
                 cartocss: $('#cartocss').html(),
             }]
         })
